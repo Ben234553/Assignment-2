@@ -14,8 +14,7 @@ with anyone or anything except for submission for grading.
 I understand that the Academic Honesty Policy will be enforced and 
 violators will be reported and appropriate action will be taken.
 
-Description: <Enter your documentation here>
-
+Description: This script visualizes memory usage of the system or specific applications using bar charts.
 '''
 
 import argparse
@@ -34,18 +33,50 @@ def parse_command_args() -> object:
 # -H human readable
 # -r running only
 
-def percent_to_graph(percent: float, length: int=20) -> str:
-    "turns a percent 0.0 - 1.0 into a bar graph"
-    ...
-# percent to graph function
+def percent_to_graph(percent: float, length: int = 20) -> str:
+    num_hashes = int(percent * length)
+    graph = '#' * num_hashes + ' ' * (length - num_hashes)
+    return graph
 
 def get_sys_mem() -> int:
-    "return total system memory (used or available) in kB"
-    ...
+    """ Returns the total system memory in kB """
+    with open('/proc/meminfo', 'r') as file:
+        for line in file:
+            if 'MemTotal:' in line:
+                return int(line.split()[1])
+    return 0
 
 def get_avail_mem() -> int:
-    "return total memory that is available"
-    ...
+    """ Returns the available system memory in kB """
+    mem_free = 0
+    swap_free = 0
+    with open('/proc/meminfo', 'r') as file:
+        for line in file:
+            if 'MemAvailable:' in line:
+                return int(line.split()[1])
+            elif 'MemFree:' in line:
+                mem_free = int(line.split()[1])
+            elif 'SwapFree:' in line:
+                swap_free = int(line.split()[1])
+    return mem_free + swap_free
+
+if __name__ == "__main__":
+    args = parse_command_args()
+
+    # Retrieve memory statistics
+    total_mem = get_sys_mem()
+    avail_mem = get_avail_mem()
+    used_mem = total_mem - avail_mem
+
+    # Calculate the percentage of used memory
+    mem_usage_percent = used_mem / total_mem
+
+    # Generate a graphical representation of memory usage
+    graph = percent_to_graph(mem_usage_percent, args.length)
+
+    print("Memory Usage Graph:")
+    print(graph)
+
 
 def pids_of_prog(app_name: str) -> list:
     "given an app name, return all pids associated with app"
